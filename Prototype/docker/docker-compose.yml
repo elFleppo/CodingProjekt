@@ -5,14 +5,12 @@ services:
     image: elasticsearch:8.6.2
     volumes:
       - es-data:/usr/share/elasticsearch/data
+      - "./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
     ports:
       - '9200:9200'
     environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms2g -Xmx4g"
-      - "network.host:0.0.0.0"
-      - ELASTIC_PASSWORD=Abc123...
+
     ulimits:
       memlock:
         soft: -1
@@ -28,6 +26,16 @@ services:
     networks:
       - dockernet
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.6.2
+    volumes:
+      - filebeat-data:/usr/share/filebeat/data
+      - "C:/Users/Stiafen Flepp/Documents/FHGR/2-Metadata/dblp.xml/data-dblp.xml:/usr/share/filebeat/data-dblp.xml"
+      - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+    networks:
+      - dockernet
+    command: filebeat -e -strict.perms=false
+
 networks:
   dockernet:
     driver: bridge
@@ -36,4 +44,6 @@ volumes:
   es-data:
     driver: local
   kibana-data:
+    driver: local
+  filebeat-data:
     driver: local
