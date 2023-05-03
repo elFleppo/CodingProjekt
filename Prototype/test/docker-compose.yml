@@ -1,16 +1,13 @@
 version: '3.7'
 
 services:
-  es01:
+  test-es01:
     container_name: es01
     image: elasticsearch:8.6.2
     volumes:
       - es-data:/usr/share/elasticsearch/data
       - "./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
       - ./sysctl.conf:/etc/sysctl.conf:ro
-      - ./elastic-certificates.p12:/usr/share/elasticsearch/config/elastic-certificates.p12
-      - ./elastic-stack-ca.p12:/usr/share/elasticsearch/config/elastic-stack-ca.p12
-      - ./http.p12:/usr/share/elasticsearch/config/http.p12
     ports:
       - '9200:9200'
       - '9300:9300'
@@ -32,15 +29,7 @@ services:
     networks:
       - dockernet
 
-  #filebeat:
-  #  image: docker.elastic.co/beats/filebeat:8.6.2
-  #  volumes:
-  #    - filebeat-data:/usr/share/filebeat/data
-  #    - "C:/Users/Stiafen Flepp/Documents/FHGR/2-Metadata/dblp.xml/data-dblp.xml:/usr/share/filebeat/data-dblp.xml"
-  #    - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
-  #  networks:
-  #    - dockernet
-  #  command: filebeat -e -strict.perms=false
+
   logstash:
     image: logstash:8.6.2
     volumes:
