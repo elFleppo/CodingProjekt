@@ -1,12 +1,16 @@
+import re
 from lxml import etree
 import sqlite3 as sqlite3
 import psycopg as psycopg
+import html
+
 dblp_record_types_for_publications = ('article', 'inproceedings', 'proceedings', 'book', 'incollection',
     'phdthesis', 'masterthesis', 'www', 'author')
 parser = etree.XMLParser(dtd_validation=True)
+
 dtd = etree.DTD("dblp.dtd")
 context = etree.iterparse("dblp.xml", events=('start', 'end'), load_dtd=True, #pylint: disable=E1101
-    resolve_entities=True)
+    resolve_entities=True, encoding="ISO-8859-1", huge_tree=True, remove_blank_text=True, remove_comments=True, recover=True)
 context = iter(context)
 event, root = next(context)
 n_records_parsed = 0
@@ -22,56 +26,65 @@ cursor.execute("CREATE TABLE IF NOT EXISTS authors (orcid VARCHAR (100) NOT NULL
 cursor.execute("CREATE TABLE IF NOT EXISTS authored (orcid VARCHAR (100), key VARCHAR(120), name VARCHAR(100), title VARCHAR(2500))")
 conn.commit()
 
-for event, elem in context:
-    if event == 'end' and elem.tag in dblp_record_types_for_publications:
-         try:
-              pub_year = None
-              for year in elem.findall('year'):
-                  pub_year = year.text
+try:
+    for event, elem in context:
+        if event == 'end' and elem.tag in dblp_record_types_for_publications:
+            try:
+                pub_year = None
+                for year in elem.findall('year'):
+                    pub_year = year.text
 
-              if pub_year is None:
-                  continue
+                if pub_year is None:
+                    continue
 
-              pub_title = None
-              pub_key = None
-              pub_mdate = None
-              pub_publtype = None
-              for title in elem.findall('title'):
-                  pub_title = title.text
-                  pub_mdate = elem.attrib["mdate"]
-                  pub_publtype = elem.attrib["publtype"]
-                  pub_key = str(elem.attrib["key"])
-                  #print("TITLE ATTRIB:", pub_mdate, pub_key, pub_publtype)
-              if pub_title is None:
-                  continue
+                pub_title = None
+                pub_key = None
+                pub_mdate = None
+                pub_publtype = None
+                for title in elem.findall('title'):
+                    pub_title = title.text
+                    pub_mdate = elem.attrib["mdate"]
+                    pub_publtype = elem.attrib["publtype"]
+                    pub_key = str(elem.attrib["key"])
+                    #print("TITLE ATTRIB:", pub_mdate, pub_key, pub_publtype)
+                if pub_title is None:
+                    continue
 
-              pub_authors = []
-              for author in elem.findall('author'):
-                  if author.text is not None:
-                      pub_authors.append(author.text)
-                      #print(author.attrib["orcid"])
-                      #print(author.attrib)
-                      orcid = author.attrib["orcid"]
-         except KeyError:
-            continue
+                pub_authors = []
+                for author in elem.findall('author'):
+                    if author.text is not None:
+                        pub_authors.append(author.text)
+                        #print(author.attrib["orcid"])
+                        #print(author.attrib)
+                        orcid = author.attrib["orcid"]
+            except KeyError:
+                continue
 
-         pub_title_sql_str = pub_title.replace("'", "''")
-         pub_author_sql_strs = []
-         for author in pub_authors:
-             pub_author_sql_strs.append(author.replace("'", "''"))
+            pub_title_sql_str = pub_title.replace("'", "''")
+            pub_author_sql_strs = []
+            for author in pub_authors:
+                pub_author_sql_strs.append(author.replace("'", "''"))
 
-         cursor.execute("INSERT INTO publications VALUES ('{key}','{title}','{pubyear}','{mdate}','{publtype}')  ON CONFLICT DO NOTHING;".format(key=pub_key, title=pub_title_sql_str, pubyear=pub_year,mdate=pub_mdate, publtype=pub_publtype))
-         conn.commit()
-         for author in pub_author_sql_strs:
-             cursor.execute("INSERT INTO authors VALUES ('{orcid}','{name}')  ON CONFLICT DO NOTHING;".format(orcid=orcid, name=author))
-             cursor.execute("INSERT INTO authored VALUES ('{orcid}','{key}','{name}','{title}')  ON CONFLICT DO NOTHING;".format(orcid=orcid, key=pub_key, name=author, title=pub_title_sql_str))
-             conn.commit()
-         elem.clear()
-         root.clear()
+            cursor.execute("INSERT INTO publications VALUES ('{key}','{title}','{pubyear}','{mdate}','{publtype}')  ON CONFLICT DO NOTHING;".format(key=pub_key, title=pub_title_sql_str, pubyear=pub_year,mdate=pub_mdate, publtype=pub_publtype))
+            conn.commit()
+            for author in pub_author_sql_strs:
+                cursor.execute("INSERT INTO authors VALUES ('{orcid}','{name}')  ON CONFLICT DO NOTHING;".format(orcid=orcid, name=author))
+                cursor.execute("INSERT INTO authored VALUES ('{orcid}','{key}','{name}','{title}')  ON CONFLICT DO NOTHING;".format(orcid=orcid, key=pub_key, name=author, title=pub_title_sql_str))
+                conn.commit()
+            elem.clear()
+            root.clear()
 
-         n_records_parsed += 1
-         print(n_records_parsed)
+            n_records_parsed += 1
+            print(n_records_parsed)
 
+except etree.ParseError as error:
+    error = str(error)
+    match = re.search(r"\'([a-z]+)\'", error)
+    new_string = match.group(1)
+    new_string = "&" + new_string
+    for match in error:
+        error.replace(match, new_string)
+        continue
 
 cursor.close()
 conn.close()

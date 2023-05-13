@@ -1,8 +1,62 @@
-/* use this code inside your css file */div.css-887ble e1tzin5v2{   #not yet working
-background-color: #FFC0CB;
- border: 2px solid;
- padding: 20px 20px 20px 20px;
- border-radius: 10px;
- color: #ffc300;
- box-shadow: 10px;
+[data-testid="stSidebar"] {             /* Sidebar auf linker Seite */
+    background-color: DarkViolet;
+
+            }
+
+[data-testid="stHeader"] {              /* Oberster Balken der Seite */
+    background-color: IndianRed;
 }
+
+[data-testid="stDecoration"] {          /* Oberster Streifen? */
+    background-color: IndianRed;
+}
+
+[data-testid="stToolbar"] {             /* Hamburger Menu oben links */
+    background-color: IndianRed;
+}
+
+[data-testid="stAppViewContainer"] {    /* Hintergrund */
+    background-color: FireBrick;
+}
+
+[data-testid="stVerticalBlock"] {       /* Abstand zwischen den Plots */
+    background-color: DeepPink;
+}
+
+
+[data-testid="stMarkdownContainer"] {   /* Titel und Text von Plots*/
+    background-color: HotPink;
+}
+
+[data-testid="stDataFrameResizable"] {  /* Dataframe, nur sichtbar beim laden */
+    background-color: white;
+}
+
+[data-testid="data-grid-canvas"] {      /* keine Ahnung */
+    background-color: brown;
+}
+
+
+[data-testid="stText"] {                /* Text */
+color: black
+font: Verdana; 
+}	
+
+[data-testid="search-input"] {          /* unsicher */
+color: blue
+}
+
+[data-testid="search-close-button"] {   /* unsicher */
+color: pink
+}
+
+
+[data-testid="stThumbValue"] {          /* Usereingabe des Sliders */
+color: black
+}
+
+
+.stSlider {
+    background-color: white;
+}
+

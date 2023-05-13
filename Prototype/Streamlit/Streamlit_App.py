@@ -5,12 +5,13 @@ import seaborn as sns
 from numba import jit
 
 
+
 st.set_page_config(page_title = "Auswirkungen von Corona auf die Publikationen im Bereich IT", layout='wide', initial_sidebar_state='expanded')
 
 st.title('Auswirkungen von Corona auf die Publikationen im Bereich IT')
 
 with open("style.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html = True)
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 st.sidebar.header("Plot")
 
@@ -35,20 +36,34 @@ class plots:
         st.subheader('Test Data')
 
 add_selectbox = st.sidebar.selectbox("test", "another test")
+
 def slider(df):
     hour_to_filter = st.slider('hour', 0, 23, 17)
     return df
 
+def iwas(df):
+    test = st.bar_chart(df.B)
+    return df
+
+def nochmehr(df):
+    itest = st.text("Ja Hallo erstmal")
+    return df
+
+nochmehr(df)
 
 st.text("write something, but nothing will happen")
 sel_col = st.container()
-input_feature = sel_col.text_input("Test","")
+
+def jaja():
+    input_feature = sel_col.text_input("Test","")
 
 slider(df)
 
 plots(df)
 
+iwas(df)
 
+jaja()
 
 #Um das Dashobard zu starten, folgende Zeile in die Anaconda Powershell, am Ort des CodingProjekt, eingeben:
 #streamlit run Streamlit_App.py
