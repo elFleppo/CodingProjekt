@@ -10,7 +10,7 @@ parser = etree.XMLParser(dtd_validation=True)
 
 dtd = etree.DTD("dblp.dtd")
 context = etree.iterparse("dblp.xml", events=('start', 'end'), load_dtd=True, #pylint: disable=E1101
-    resolve_entities=True, encoding="ISO-8859-1", huge_tree=True, remove_blank_text=True, remove_comments=True, recover=True)
+    resolve_entities=True, encoding="ISO-8859-1", remove_blank_text=True, huge_tree=True)
 context = iter(context)
 event, root = next(context)
 n_records_parsed = 0
@@ -19,7 +19,7 @@ n_records_parsed = 0
 #conn.execute("CREATE TABLE IF NOT EXISTS publications (title VARCHAR(200), year INTEGER)")
 #conn.execute("CREATE TABLE IF NOT EXISTS authors (name VARCHAR(100))")
 #conn.execute("CREATE TABLE IF NOT EXISTS authored (name VARCHAR(100), title VARCHAR(200))")
-conn = psycopg.connect(host="localhost", dbname="dblp", user="postgres", password="cds2023")
+conn = psycopg.connect(host="localhost", dbname="dblp", user="postgres", password="Engadin12345")
 cursor = conn.cursor()
 cursor.execute("CREATE TABLE IF NOT EXISTS publications (key VARCHAR(120) PRIMARY KEY NOT NULL, title VARCHAR(2500), pubyear VARCHAR(100), mdate varchar(50), publtype VARCHAR(50))")
 cursor.execute("CREATE TABLE IF NOT EXISTS authors (orcid VARCHAR (100) NOT NULL PRIMARY KEY, name VARCHAR(100))")
@@ -82,9 +82,11 @@ except etree.ParseError as error:
     match = re.search(r"\'([a-z]+)\'", error)
     new_string = match.group(1)
     new_string = "&" + new_string
+    new_char = html.unescape(new_string)
+    print(new_char)
     for match in error:
-        error.replace(match, new_string)
-        continue
+        error.replace(error, new_char)
+
 
 cursor.close()
 conn.close()
