@@ -1,62 +1,43 @@
 [data-testid="stSidebar"] {             /* Sidebar auf linker Seite */
-    background-color: DarkViolet;
-
-            }
+    background-color: LightCoral;
+}
 
 [data-testid="stHeader"] {              /* Oberster Balken der Seite */
-    background-color: IndianRed;
+    background-color: LightCoral;
 }
 
-[data-testid="stDecoration"] {          /* Oberster Streifen? */
-    background-color: IndianRed;
-}
 
 [data-testid="stToolbar"] {             /* Hamburger Menu oben links */
-    background-color: IndianRed;
+    background-color: LightCoral;
 }
 
 [data-testid="stAppViewContainer"] {    /* Hintergrund */
-    background-color: FireBrick;
+    background-color: #997a8d;
+    Background-image: url(https://pngimg.com/uploads/coronavirus/coronavirus_PNG46.png);
+    background-size: 50px;
+    background-repeat: no-repeat;
+    background-position: 1475px 100px;
 }
-
-[data-testid="stVerticalBlock"] {       /* Abstand zwischen den Plots */
-    background-color: DeepPink;
-}
-
 
 [data-testid="stMarkdownContainer"] {   /* Titel und Text von Plots*/
-    background-color: HotPink;
 }
 
 [data-testid="stDataFrameResizable"] {  /* Dataframe, nur sichtbar beim laden */
     background-color: white;
 }
 
-[data-testid="data-grid-canvas"] {      /* keine Ahnung */
-    background-color: brown;
+
+.stSlider {                             /* Usereingabe des Sliders */
+    background-color: LightSalmon;
+}
+
+.stDateInput {
+    background-color: LightCoral
+}
+
+.stCheckbox {
+    background-color: LightSalmon
 }
 
 
-[data-testid="stText"] {                /* Text */
-color: black
-font: Verdana; 
-}	
-
-[data-testid="search-input"] {          /* unsicher */
-color: blue
-}
-
-[data-testid="search-close-button"] {   /* unsicher */
-color: pink
-}
-
-
-[data-testid="stThumbValue"] {          /* Usereingabe des Sliders */
-color: black
-}
-
-
-.stSlider {
-    background-color: white;
-}
 
