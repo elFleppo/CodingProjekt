@@ -4,100 +4,108 @@ import numpy as np
 import seaborn as sns
 from numba import jit
 import psycopg as psycopg
+from matplotlib import pyplot as plt
 
-conn = psycopg.connect(host="localhost", dbname="dblp", user="postgres", password="")
 
-cursor = conn.cursor()
+#conn = psycopg.connect(host="localhost", dbname="dblp", user="postgres", password="")
+
 
 st.set_page_config(page_title = "Auswirkungen von Corona auf die Publikationen in der DBLP", layout='wide', initial_sidebar_state='expanded')
 
-st.title('Auswirkungen von Corona auf die Publikationen in der DBLP')
+
+conn = st.experimental_connection(name = "dblp", type="sql", max_entries=None, ttl=None, autocommit=True)
+
+
+st.title("Auswirkungen von Corona auf die Publikationen in der DBLP")
+
 
 with open("style.css") as f:
     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
-info1, info2, info3, info4 = st.columns(4, gap = "medium")
+info1, info2, info3, info4 = st.columns(4, gap = "medium")  #Widgets, "einfache" Infos, z.b. Anzahl Authoren
 
 
 plot1, plot2 = st.columns(2, gap = "large")
 
 plot3, plot4 = st.columns(2, gap = "large")
 
-df = pd.DataFrame(np.random.randint(0,20,size=(10000, 15)), columns=list('ABCDEFGHIJKLMNO'))
 
-eins = df.A
-
-zwei = df.B
-
+df = conn.query("select * from publications")
+st.dataframe(df)
 
 with info1:
-    cursor.execute("SELECT title FROM publications")
-    all_titles = cursor.fetchall()
-    st.metric(label = "Publikationen", value = len(all_titles))
+    all_publications = conn.query("select title from publications")
+    st.metric(label = "Publikationen", value = len(all_publications))
 
 with info2:
-    cursor.execute("SELECT name FROM authors")
-    all_authors = cursor.fetchall()
+    all_authors = conn.query("select name from authors")
     st.metric(label="Authoren", value=len(all_authors))
 
 with plot1:
-    st.line_chart(eins)
+    st.line_chart(df.pubyear)
     with st.expander("See explanation"):
         st.write("Das siehts du hier wegen xyz")
 
 with plot2:
-    st.bar_chart(eins)
+    st.bar_chart(df.pubyear)
 
 with plot3:
-    st.area_chart(eins)
+    st.area_chart(df.pubyear)
 
 with plot4:
-    st.line_chart(zwei)
+    st.line_chart(df.pubyear)
 
-plot_eins = st.sidebar.header("Plot Nummer 1")
+tab1, tab2 = st.sidebar.tabs(["Eingabe", "Detail Bar"])
 
-def selectbox(df):
-    sidebar_selectbox = st.sidebar.selectbox("Wähle eine Option", ("Option 1", "Option 2", "Option 3"))
-    return df
-selectbox(df)
+with tab1:
+    st.header("Plot Nummer 1")
 
-plot_zwei = st.sidebar.header("Plot Nummer 2")
+    def selectbox(df):
+        sidebar_selectbox = st.selectbox("Wähle eine Option", ("Option 1", "Option 2", "Option 3"))
+        return df.pubyear
+    selectbox(df.pubyear)
 
-def slider(df):
-    sidebar_slider = st.sidebar.slider('Zeit', 0, 24, 0)
-    return df
+    plot_zwei = st.header("Plot Nummer 2")
 
-slider(df)
+    def slider(df):
+        sidebar_slider = st.slider('Zeit', 0, 24, 0)
+        return df.pubyear
 
-
-plot_drei = st.sidebar.header("Plot Nummer 3")
-
-def button(df):
-    sidebar_button = st.sidebar.button("Des isch a Knopf")
-    return df
-button(df)
-
-def checkbox(df):
-    sidebar_checkbox = st.sidebar.checkbox("Zeig etwas an")
-    return df.A
-
-checkbox(df)
+    slider(df.pubyear)
 
 
-plot_vier = st.sidebar.header("Plot Nummer 4")
+    plot_drei = st.header("Plot Nummer 3")
 
-def date_input(df):
-    sidebar_date_input = st.sidebar.date_input("test")
-    return df
+    def button(df):
+        sidebar_button = st.button("Hit me")
+        return df.pubyear
+    button(df.pubyear)
 
-date_input(df)
+    def checkbox(df):
+        sidebar_checkbox = st.checkbox("Zeig etwas an")
+        return df.pubyear
+
+    checkbox(df.pubyear)
 
 
-plot_vier = st.sidebar.header("Plot Nummer 5")
+    plot_vier = st.header("Plot Nummer 4")
+
+    def date_input(df):
+        sidebar_date_input = st.date_input("test")
+        return df.pubyear
+
+    date_input(df.pubyear)
 
 
+    plot_vier = st.header("Plot Nummer 5")
 
+
+with tab2:
+    plot_detail = st.header("Detailplot Nummer 1")
+
+
+    plot_detail2 = st.header("Detailplot Nummer 2")
 
 
 
