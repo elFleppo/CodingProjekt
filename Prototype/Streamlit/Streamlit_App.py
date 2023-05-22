@@ -4,8 +4,17 @@ import numpy as np
 import seaborn as sns
 from numba import jit
 import psycopg as psycopg
+import collections
+from nltk.corpus import stopwords
 from matplotlib import pyplot as plt
 
+stop_words = set(stopwords.words('english'))
+
+#ÜBERSICHT:
+# 3 Tabellen: authored, authors, publications
+#authored: ORCID, key, name, title
+#authors: orcid, name
+#publications: key, title, pupyear, mdate, publtype
 
 #conn = psycopg.connect(host="localhost", dbname="dblp", user="postgres", password="")
 
@@ -26,13 +35,12 @@ with open("style.css") as f:
 info1, info2, info3, info4 = st.columns(4, gap = "medium")  #Widgets, "einfache" Infos, z.b. Anzahl Authoren
 
 
-plot1, plot2 = st.columns(2, gap = "large")
+plot1, plot2 = st.columns(2, gap = "large")     #2x2 Matrix an Plots
 
 plot3, plot4 = st.columns(2, gap = "large")
 
 
 df = conn.query("select * from publications")
-st.dataframe(df)
 
 with info1:
     all_publications = conn.query("select title from publications")
@@ -61,41 +69,41 @@ tab1, tab2 = st.sidebar.tabs(["Eingabe", "Detail Bar"])
 with tab1:
     st.header("Plot Nummer 1")
 
-    def selectbox(df):
+    def selectbox():
         sidebar_selectbox = st.selectbox("Wähle eine Option", ("Option 1", "Option 2", "Option 3"))
-        return df.pubyear
-    selectbox(df.pubyear)
+        return "test"
+    selectbox()
 
     plot_zwei = st.header("Plot Nummer 2")
 
-    def slider(df):
+    def slider():
         sidebar_slider = st.slider('Zeit', 0, 24, 0)
-        return df.pubyear
+        return "test"
 
-    slider(df.pubyear)
+    slider()
 
 
     plot_drei = st.header("Plot Nummer 3")
 
-    def button(df):
+    def button():
         sidebar_button = st.button("Hit me")
-        return df.pubyear
-    button(df.pubyear)
+        return "test"
+    button()
 
-    def checkbox(df):
+    def checkbox():
         sidebar_checkbox = st.checkbox("Zeig etwas an")
-        return df.pubyear
+        return "test"
 
-    checkbox(df.pubyear)
+    checkbox()
 
 
     plot_vier = st.header("Plot Nummer 4")
 
-    def date_input(df):
+    def date_input():
         sidebar_date_input = st.date_input("test")
-        return df.pubyear
+        return "test"
 
-    date_input(df.pubyear)
+    date_input()
 
 
     plot_vier = st.header("Plot Nummer 5")
@@ -103,12 +111,44 @@ with tab1:
 
 with tab2:
     plot_detail = st.header("Detailplot Nummer 1")
-
+    counter = df.pubyear.value_counts()
+    st.line_chart(counter)
 
     plot_detail2 = st.header("Detailplot Nummer 2")
+    all_publications= df.title.to_string()
+
+    def readDataToList(all_publications):
+        most_common_num = 10
+        keywords = []
+        word_list = all_publications.split()
+        for word in word_list:
+            if "('" in word:
+                word = word.replace("('", "")
+            if ".',)" in word:
+                word = word.replace(".',)", "")
+            if "," in word:
+                word = word.replace(",", "")
+            if ":" in word:
+                word = word.replace(":", "")
+            if "..." in word:
+                word = word.replace("...", "")
+            if word.lower() not in stop_words:
+                keywords.append(word.lower())
+        counter = collections.Counter(keywords)
+        most_common = counter.most_common(most_common_num)
+        return most_common
 
 
+    #st.write(readDataToList(all_publications))
 
+    histvalues = readDataToList(all_publications)
+
+    def histogram(histvalues):
+        histdf = pd.DataFrame(data = histvalues, columns=["word", "counting"])
+        st.bar_chart(data = histdf.counting)
+        #st.write(histdf)
+
+    histogram(histvalues)
 
 #Um das Dashobard zu starten, folgende Zeile in die Anaconda Powershell, am Ort des CodingProjekt, eingeben:
 #streamlit run Streamlit_App.py
