@@ -66,6 +66,7 @@ with plot4:
 
 tab1, tab2 = st.sidebar.tabs(["Eingabe", "Detail Bar"])
 
+
 with tab1:
     st.header("Plot Nummer 1")
 
@@ -115,38 +116,35 @@ with tab2:
     st.line_chart(counter)
 
     plot_detail2 = st.header("Detailplot Nummer 2")
-    all_publications= df.title.to_string()
+    df = df.drop(["mdate", "publtype", "key", "pubyear"], axis = 1)
+    all_publications= df.to_string(decimal = ";")
+
 
     def readDataToList(all_publications):
-        most_common_num = 10
+        most_common_num = 100
         keywords = []
         word_list = all_publications.split()
         for word in word_list:
-            if "('" in word:
-                word = word.replace("('", "")
-            if ".',)" in word:
-                word = word.replace(".',)", "")
-            if "," in word:
-                word = word.replace(",", "")
-            if ":" in word:
-                word = word.replace(":", "")
-            if "..." in word:
-                word = word.replace("...", "")
+            if "." in word:
+                word = word.replace(".", "")
+            if "-" in word:
+                word = word.replace("-", "")
             if word.lower() not in stop_words:
                 keywords.append(word.lower())
-        counter = collections.Counter(keywords)
+        new_list = list(filter(lambda x: x != "", keywords))
+        #with open("keywordstest.txt", "w", encoding="utf-8") as file:
+            #file.write(str(new_list))
+        counter = collections.Counter(new_list)
         most_common = counter.most_common(most_common_num)
         return most_common
 
-
-    #st.write(readDataToList(all_publications))
 
     histvalues = readDataToList(all_publications)
 
     def histogram(histvalues):
         histdf = pd.DataFrame(data = histvalues, columns=["word", "counting"])
         st.bar_chart(data = histdf.counting)
-        #st.write(histdf)
+        st.write(histdf)
 
     histogram(histvalues)
 
