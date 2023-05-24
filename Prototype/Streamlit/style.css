@@ -26,6 +26,17 @@
     background-color: white;
 }
 
+[data-testid="stMetricValue"] {  /*  */
+    background-color: #9a4eae;
+    padding: 3% 3% 3% 12.5%;
+    border-radius: 5px;
+    }
+
+[data-testid="stMetricLabel"] {  /*  */
+    background-color: #9a4eae;
+    padding: 3% 3% 3% 12.5%;
+    border-radius: 5px;
+}
 
 .stSlider {                             /* Usereingabe des Sliders */
     background-color: LightSalmon;
