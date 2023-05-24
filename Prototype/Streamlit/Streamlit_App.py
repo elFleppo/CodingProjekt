@@ -25,23 +25,47 @@ st.set_page_config(page_title = "Auswirkungen von Corona auf die Publikationen i
 def db_connection():
     return st.experimental_connection(name = "dblpppppp", type="sql", max_entries=None, ttl=None, autocommit=True)
 
+
 conn = db_connection()
+
 @st.cache_data              #Cache diese Querry. Geht nur als Funktion.
 def table_publications():
     return conn.query("select * from publications")
+
 @st.cache_data
-def all_publications():
+def all_titles():
     return conn.query("select title from publications")
+
+def all_pubyear():
+    return conn.query("select pubyear from publications")
+
+@st.cache_data
+def all_mdate():
+    return conn.query("select mdate from publications")
+
+@st.cache_data
+def all_publtype():
+    return conn.query("select publtype from publications")
+
+
 @st.cache_data
 def all_authors():
     return conn.query("select name from authors")
 
 
-table_publications = table_publications()               #Bin mir unsicher ob das so gut ist, werde mich informieren. 
+#table_publications = table_publications()               #Bin mir unsicher ob das so gut ist, werde mich informieren.
 
-all_publications = all_publications()
+all_titles = all_titles()
+
+all_pubyear = all_pubyear()
+
+all_mdate = all_mdate()
+
+all_publtype = all_publtype()
 
 all_authors = all_authors()
+
+table_publications = table_publications()
 
 
 st.title("Auswirkungen von Corona auf die Publikationen in der DBLP")
@@ -81,13 +105,13 @@ def readDataToList(all_publications):
 
 
 with info1:
-    st.metric(label = "Publikationen", value = len(all_publications))
+    st.metric(label = "Publikationen", value = len(all_titles))
 
 with info2:
     st.metric(label="Authoren", value=len(all_authors))
 
 with plot1:
-    #ERSTER PLOT HIER
+    st.bar_chart()
     with st.expander("See explanation"):
         st.write("Das siehts du hier wegen xyz")
         pass
@@ -159,8 +183,8 @@ with tab2:
     plot_detail = st.header("Detailplot Nummer 1")
 
 
-    publications_per_year = table_publications.pubyear.where(table_publications.pubyear > "1993")
-    st.bar_chart(publications_per_year)
+    #publications_per_year = table_publications.pubyear.where(table_publications.pubyear > "1993")
+    st.bar_chart(all_pubyear)
 
 
     plot_detail2 = st.header("Detailplot Nummer 2")
@@ -169,14 +193,20 @@ with tab2:
     #print(just_publications.describe())
     all_publications = just_publications.to_string(decimal = ";", index = False)           #Series_to_string geht leider nicht, darum so
 
-    histvalues = readDataToList(all_publications)
+    hist_values = readDataToList(all_publications)
+
+
+    #values = all_publtype.value_counts()
+    #labels = ["data", "disambiguation", "edited", "encyclopedia", "group", "habil", "informal", "informal withdrawn", "noshow", "software", "survey", "withdrawn", "none"]
+
+    st.bar_chart(data = all_publtype)
 
     def histogram(histvalues):
         histdf = pd.DataFrame(data = histvalues, columns=["word", "counting"])          #Wandle Liste in df zurück
         st.bar_chart(data = histdf.counting)
         st.write(histdf)
 
-    histogram(histvalues)
+    histogram(hist_values)
 
 #Um das Dashobard zu starten, folgende Zeile in die Anaconda Powershell, am Ort des CodingProjekt, eingeben:
 #streamlit run Streamlit_App.py
