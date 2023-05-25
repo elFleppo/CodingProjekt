@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import seaborn as sns
+import plotly.express as px
 from numba import jit
 import psycopg as psycopg
 import collections
@@ -28,44 +29,18 @@ def db_connection():
 
 conn = db_connection()
 
-@st.cache_data              #Cache diese Querry. Geht nur als Funktion.
-def table_publications():
-    return conn.query("select * from publications")
+table_publications = conn.query("select * from publications")
 
-@st.cache_data
-def all_titles():
-    return conn.query("select title from publications")
+all_titles = conn.query("select title from publications")
 
-def all_pubyear():
-    return conn.query("select pubyear from publications")
+all_pubyear = conn.query("select pubyear from publications")
 
-@st.cache_data
-def all_mdate():
-    return conn.query("select mdate from publications")
+all_mdate = conn.query("select mdate from publications")
 
-@st.cache_data
-def all_publtype():
-    return conn.query("select publtype from publications")
+all_publtype = conn.query("select publtype from publications")
 
+all_authors = conn.query("select name from authors")
 
-@st.cache_data
-def all_authors():
-    return conn.query("select name from authors")
-
-
-#table_publications = table_publications()               #Bin mir unsicher ob das so gut ist, werde mich informieren.
-
-all_titles = all_titles()
-
-all_pubyear = all_pubyear()
-
-all_mdate = all_mdate()
-
-all_publtype = all_publtype()
-
-all_authors = all_authors()
-
-table_publications = table_publications()
 
 
 st.title("Auswirkungen von Corona auf die Publikationen in der DBLP")
@@ -83,24 +58,25 @@ plot1, plot2 = st.columns(2, gap = "large")     #2x2 Matrix an Plots
 plot3, plot4 = st.columns(2, gap = "large")
 
 
-def readDataToList(all_publications):
-    most_common_num = 10
+
+@st.cache_data
+def readDataToList(query, number):
+    all_titles_string = query.to_string(decimal=";", index=False)
     keywords = []
-    word_list = all_publications.split()
+    word_list = all_titles_string.split()
     for word in word_list:
         if "." in word:
             word = word.replace(".", "")
-        if "-" in word:
-            word = word.replace("-", "")
         if word.lower() not in stop_words:
             keywords.append(word.lower())
-    new_list = list(filter(lambda x: x != "", keywords))            #"" ist ein eigener Char in Keywords, darum wird das auch ersetzt.
-    # with open("keywords.txt", "w", encoding="utf-8") as file:
-    # file.write(str(new_list))
-    counter = collections.Counter(new_list)                         #Gibt ein Dict aus. Das Wort ist der Key, und die Häufigkeit das Value.
-    most_common = counter.most_common(most_common_num)
-    return most_common                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
+    keywords = list(filter(lambda x: x != "", keywords))            #"" ist ein eigener Char in Keywords, darum wird das auch ersetzt.
+    with open("keywords.txt", "w", encoding="utf-8") as file:
+        file.write(str(keywords))
+    counter = collections.Counter(keywords)                         #Gibt ein Dict aus. Das Wort ist der Key, und die Häufigkeit das Value.
+    most_common_keywords = counter.most_common(number)
+    return most_common_keywords                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
 
+hist_values = readDataToList(all_titles, 10)
 
 
 
@@ -111,10 +87,18 @@ with info2:
     st.metric(label="Authoren", value=len(all_authors))
 
 with plot1:
-    st.bar_chart()
-    with st.expander("See explanation"):
-        st.write("Das siehts du hier wegen xyz")
-        pass
+
+    keywords = []
+    keywords_valcount = []
+
+    for i in hist_values:
+        keywords.append(i[0])
+        keywords_valcount.append(i[1])
+
+    fig = plt.figure(figsize=(4, 4))
+    sns.lineplot(x = keywords, y = keywords_valcount)
+    st.pyplot(fig)
+
 
 with plot2:
     #ZWEITER PLOT HIER
@@ -139,8 +123,8 @@ with tab1:
     st.header("Plot Nummer 1")
 
     def selectbox():
-        sidebar_selectbox = st.selectbox("Wähle eine Option", ("Option 1", "Option 2", "Option 3"))
-        return "test"
+        sidebar_selectbox = st.selectbox("Wähle eine Option", (keywords[0], keywords[1], keywords[2], keywords[3], keywords[4]))
+        return "ok"
     selectbox()
 
 
@@ -189,11 +173,13 @@ with tab2:
 
     plot_detail2 = st.header("Detailplot Nummer 2")
 
-    just_publications = table_publications.drop(["mdate", "publtype", "key", "pubyear"], axis = 1)
-    #print(just_publications.describe())
-    all_publications = just_publications.to_string(decimal = ";", index = False)           #Series_to_string geht leider nicht, darum so
+    def histogram(hist_values):
+        histdf = pd.DataFrame(data=hist_values, columns=["word", "counting"])  # Wandle Liste in df zurück
+        st.bar_chart(data=histdf.counting)
+        st.write(histdf)
 
-    hist_values = readDataToList(all_publications)
+        histogram(hist_values)
+
 
 
     #values = all_publtype.value_counts()
@@ -201,12 +187,7 @@ with tab2:
 
     st.bar_chart(data = all_publtype)
 
-    def histogram(histvalues):
-        histdf = pd.DataFrame(data = histvalues, columns=["word", "counting"])          #Wandle Liste in df zurück
-        st.bar_chart(data = histdf.counting)
-        st.write(histdf)
 
-    histogram(hist_values)
 
 #Um das Dashobard zu starten, folgende Zeile in die Anaconda Powershell, am Ort des CodingProjekt, eingeben:
 #streamlit run Streamlit_App.py

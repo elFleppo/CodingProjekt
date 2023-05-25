@@ -1,18 +1,18 @@
 [data-testid="stSidebar"] {             /* Sidebar auf linker Seite */
-    background-color: LightCoral;
+    background-color: #d0f0c0;
 }
 
 [data-testid="stHeader"] {              /* Oberster Balken der Seite */
-    background-color: LightCoral;
+    background-color: #d0f0c0;
 }
 
 
 [data-testid="stToolbar"] {             /* Hamburger Menu oben links */
-    background-color: LightCoral;
+    background-color: #d0f0c0;
 }
 
 [data-testid="stAppViewContainer"] {    /* Hintergrund */
-    background-color: #997a8d;
+    background-color: #f0fff0;
     Background-image: url(https://pngimg.com/uploads/coronavirus/coronavirus_PNG46.png);
     background-size: 50px;
     background-repeat: no-repeat;
@@ -27,25 +27,25 @@
 }
 
 [data-testid="stMetricValue"] {  /*  */
-    background-color: #9a4eae;
+    background-color: #d0f0c0;
     padding: 3% 3% 3% 12.5%;
     border-radius: 5px;
     }
 
 [data-testid="stMetricLabel"] {  /*  */
-    background-color: #9a4eae;
+    background-color: #d0f0c0;
     padding: 3% 3% 3% 12.5%;
     border-radius: 5px;
 }
 
 .stSlider {                             /* Usereingabe des Sliders */
-    background-color: LightSalmon;
+    background-color: #ace1af;
 }
 
 .stDateInput {
-    background-color: LightCoral
+    background-color: #ace1af;
 }
 
 .stCheckbox {
-    background-color: LightSalmon
+    background-color: #ace1af;
 }
