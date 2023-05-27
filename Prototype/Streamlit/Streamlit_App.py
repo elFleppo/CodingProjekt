@@ -22,7 +22,6 @@ stop_words = set(stopwords.words('english'))
 
 st.set_page_config(page_title = "Auswirkungen von Corona auf die Publikationen in der DBLP", layout='wide', initial_sidebar_state='expanded')   #Muss erste Zeile von st. sein
 
-@st.cache_resource(show_spinner="Lade die Daten aus der Datenbank...")          #https://docs.streamlit.io/library/advanced-features/caching
 def db_connection():
     return st.experimental_connection(name = "dblpppppp", type="sql", max_entries=None, ttl=None, autocommit=True)
 
@@ -70,15 +69,23 @@ def readDataToList(query, number):
         if word.lower() not in stop_words:
             keywords.append(word.lower())
     keywords = list(filter(lambda x: x != "", keywords))            #"" ist ein eigener Char in Keywords, darum wird das auch ersetzt.
-    with open("keywords.txt", "w", encoding="utf-8") as file:
-        file.write(str(keywords))
+    #with open("keywords.txt", "w", encoding="utf-8") as file:
+        #file.write(str(keywords))
     counter = collections.Counter(keywords)                         #Gibt ein Dict aus. Das Wort ist der Key, und die Häufigkeit das Value.
     most_common_keywords = counter.most_common(number)
+    #st.write(most_common_keywords)
     return most_common_keywords                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
 
 hist_values = readDataToList(all_titles, 10)
 
+def keyword_Lineplot(query):
+    bool_keyword = all_titles["title"].str.contains("data", case = False, flags = 0)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
+    keyword_year = all_pubyear.merge(bool_keyword, left_index=True, right_index=True)
+    keyword_True = keyword_year.loc[keyword_year.title, :]        #Filtere nach True.
+    keyword_per_year = keyword_True.groupby("pubyear").sum()      
+    st.line_chart(keyword_per_year)
 
+keyword_Lineplot(all_titles)
 
 with info1:
     st.metric(label = "Publikationen", value = len(all_titles))
@@ -95,8 +102,9 @@ with plot1:
         keywords.append(i[0])
         keywords_valcount.append(i[1])
 
-    fig = plt.figure(figsize=(4, 4))
-    sns.lineplot(x = keywords, y = keywords_valcount)
+    fig, ax = plt.subplots()
+    ax.plot(keywords, keywords_valcount)
+
     st.pyplot(fig)
 
 
@@ -123,8 +131,8 @@ with tab1:
     st.header("Plot Nummer 1")
 
     def selectbox():
-        sidebar_selectbox = st.selectbox("Wähle eine Option", (keywords[0], keywords[1], keywords[2], keywords[3], keywords[4]))
-        return "ok"
+        sidebar_selectbox = st.selectbox("Wähle ein Keyword", (keywords[0], keywords[1], keywords[2], keywords[3], keywords[4]))
+        return sidebar_selectbox
     selectbox()
 
 
@@ -173,12 +181,13 @@ with tab2:
 
     plot_detail2 = st.header("Detailplot Nummer 2")
 
+
     def histogram(hist_values):
         histdf = pd.DataFrame(data=hist_values, columns=["word", "counting"])  # Wandle Liste in df zurück
         st.bar_chart(data=histdf.counting)
         st.write(histdf)
 
-        histogram(hist_values)
+        #histogram(hist_values)
 
 
 
