@@ -91,7 +91,7 @@ for i in hist_values:
 
 
 @st.cache_data
-def keyword_per_year(query, keyword):
+def keyword_per_year(keyword):
         bool_keyword = all_titles["title"].str.contains(keyword, case = False, flags = 0)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
         keyword_year = all_pubyear.merge(bool_keyword, left_index=True, right_index=True)
         keyword_True = keyword_year.loc[keyword_year.title, :]        #Filtere nach True.
@@ -110,7 +110,7 @@ tab1, tab2 = st.sidebar.tabs(["Eingabe", "Detail Bar"])
 with tab1:
     st.header("Plot Nummer 1")
 
-    userinput = st.text_input("Tippe ein Keyword ein", value= "data")
+    userinput_keyword = st.text_input("Tippe ein Keyword ein", value= "data")
 
 
     plot_zwei = st.header("Plot Nummer 2")
@@ -130,7 +130,8 @@ with tab1:
     plot_fünf = st.header("Plot Nummer 5")
 
 
-keyword_Lineplot = keyword_per_year(all_titles, userinput)
+keyword_Lineplot = keyword_per_year(userinput_keyword)
+
 
 with tab2:
     plot_detail = st.header("Detailplot Nummer 1")
