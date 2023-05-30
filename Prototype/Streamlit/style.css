@@ -13,10 +13,6 @@
 
 [data-testid="stAppViewContainer"] {    /* Hintergrund */
     background-color: #f0fff0;
-    Background-image: url(https://pngimg.com/uploads/coronavirus/coronavirus_PNG46.png);
-    background-size: 50px;
-    background-repeat: no-repeat;
-    background-position: 1475px 120px;
 }
 
 [data-testid="stMarkdownContainer"] {   /* Titel und Text von Plots*/
