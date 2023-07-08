@@ -2,13 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import plotly.express as px
-from numba import jit
 import psycopg as psycopg
 import collections
 from nltk.corpus import stopwords
 from matplotlib import pyplot as plt
-
 
 ################################################ O V E R V I E W #######################################################
 
@@ -66,26 +63,27 @@ df_publPerYear = conn.query("SELECT pubyear, COUNT(pubyear) FROM publications WH
 
 
 ############################################### F U N C T I O N S ######################################################
-
+#progress_bar = st.progress(0)
 
 @st.cache_data
 def readDataToList(query, number):
-    non_keywords = ["none", "home", "page"]
-    stop_words = set(stopwords.words('english'))
-    all_titles_string = query.to_string(decimal=";", index=False)
-    keywords = []
-    word_list = all_titles_string.split()
-    for word in word_list:
-        if "." in word:
-            word = word.replace(".", "")
-        if word.lower() not in stop_words and word.lower() not in non_keywords:
-            keywords.append(word.lower())
-    keywords = list(filter(lambda x: x != "", keywords))            #"" ist ein eigener Char in Keywords, darum wird das auch ersetzt.
-    #with open("keywords.txt", "w", encoding="utf-8") as file:
-        #file.write(str(keywords))
-    counter = collections.Counter(keywords)                         #Gibt ein Dict aus. Das Wort ist der Key, und die Häufigkeit das Value.
-    most_common_keywords = counter.most_common(number)
-    return most_common_keywords                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
+    with st.spinner("You spin me right round, baby right round"):
+        non_keywords = ["none", "home", "page"]
+        stop_words = set(stopwords.words('english'))
+        all_titles_string = query.to_string(decimal=";", index=False)
+        keywords = []
+        word_list = all_titles_string.split()
+        for word in word_list:
+            if "." in word:
+                word = word.replace(".", "")
+            if word.lower() not in stop_words and word.lower() not in non_keywords:
+                keywords.append(word.lower())
+        keywords = list(filter(lambda x: x != "", keywords))            #"" ist ein eigener Char in Keywords, darum wird das auch ersetzt.
+        #with open("keywords.txt", "w", encoding="utf-8") as file:      #Keywords kontrollieren
+            #file.write(str(keywords))
+        counter = collections.Counter(keywords)                         #Gibt ein Dict aus. Das Wort ist der Key, und die Häufigkeit das Value.
+        most_common_keywords = counter.most_common(number)
+        return most_common_keywords                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
 
 
 hist_values = readDataToList(all_titles, 10)
@@ -94,17 +92,22 @@ keywords = []
 keywords_valcount = []
 
 for i in hist_values:
-    keywords.append(i[0])
-    keywords_valcount.append(i[1])
+    with st.spinner("You spin me right round, baby right round"):
+        keywords.append(i[0])
+        keywords_valcount.append(i[1])
 
 
 @st.cache_data
 def keyword_per_year(keyword):
+    with st.spinner("You spin me right round, baby right round"):
         bool_keyword = all_titles["title"].str.contains(keyword, case = False, flags = 0)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
         keyword_year = all_pubyear.merge(bool_keyword, left_index=True, right_index=True)
         keyword_True = keyword_year.loc[keyword_year.title, :]          #Filtere nach True.
-        keyword_per_year = keyword_True.groupby("pubyear").sum()           #Gruppiere nach pubyear und gib die Anzahl zurück
-        return keyword_per_year
+        keyword_per_year = keyword_True.groupby("pubyear").sum()        #Gruppiere nach pubyear und gib die Anzahl zurück
+        if keyword_per_year.empty == True:
+            st.error("Das eingegebene Keyword existiert nicht - Geben Sie ein anderes ein.")
+        else:
+            return keyword_per_year
 
 
 def analyzePublType(df_publtype):
@@ -197,8 +200,10 @@ with tab2:
 
     # prepare data
     for i in range(0, len(df_publPerYear.index)):
-        x.append(df_publPerYear['pubyear'][i])
-        y.append(df_publPerYear['count'][i])
+        with st.spinner("Plot wird geladen"):
+            x.append(df_publPerYear['pubyear'][i])
+            y.append(df_publPerYear['count'][i])
+
 
     # plot
     fig, ax = plt.subplots(figsize=(20,12))
@@ -225,7 +230,26 @@ with plot1:
 with plot2:
 
     line_plot_df = pd.DataFrame(keyword_Lineplot)
-    st.write(line_plot_df)                          #Idee: Mein pubyear mit Lisas Liste "x" (auch pubyear) vergleichen und wenn == True dann gib Lisas y an dieser Stelle zurück. Dann teile title (also die Anzahl vorkommen) durch y.
+    df_publPerYear_keyword = df_publPerYear.merge(right = line_plot_df, how = 'left', left_on = 'pubyear', right_on= 'pubyear')
+    df_publPerYear_keyword = df_publPerYear_keyword.rename(columns={"pubyear": "Year", "count": "Publications", "title": "Keywords"})
+    df_publPerYear_keyword = df_publPerYear_keyword.fillna(value = 0, axis = 1)
+
+    percent_list = []
+    for i, j in zip(df_publPerYear_keyword.Keywords, df_publPerYear_keyword.Publications):
+        try:
+            percent = i / j
+        except ZeroDivisionError:
+            percent_list.append(0)
+        else:
+            percent_list.append(percent)
+
+    df_publPerYear_keyword['Percent'] = percent_list
+
+    df_percent = df_publPerYear_keyword.drop(labels= ['Publications', 'Keywords'], axis = 1)
+
+    fig, ax = plt.subplots(figsize=(30, 24))
+    ax.plot(df_percent.Year, df_percent.Percent)
+    st.pyplot(fig)
 
 
 with plot3:
