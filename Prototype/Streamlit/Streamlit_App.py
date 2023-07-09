@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import seaborn as sns
 import psycopg as psycopg
 import collections
 from nltk.corpus import stopwords
 from matplotlib import pyplot as plt
+from pandas.errors import EmptyDataError
 
 ################################################ O V E R V I E W #######################################################
 
@@ -63,7 +63,7 @@ df_publPerYear = conn.query("SELECT pubyear, COUNT(pubyear) FROM publications WH
 
 
 ############################################### F U N C T I O N S ######################################################
-#progress_bar = st.progress(0)
+progress_bar = st.progress(0) #Wir haben versucht einen Ladebalken zu implementieren, jedoch haben wir sehr kurze Ladezeiten.
 
 @st.cache_data
 def readDataToList(query, number):
@@ -95,6 +95,8 @@ for i in hist_values:
     with st.spinner("You spin me right round, baby right round"):
         keywords.append(i[0])
         keywords_valcount.append(i[1])
+st.success("hat geklappt")
+
 
 
 @st.cache_data
@@ -164,36 +166,25 @@ tab1, tab2 = st.sidebar.tabs(["Eingabe", "Detail Bar"])
 
 
 with tab1:
-    st.header("Plot Nummer 1")
+    st.header("Keywords suchen")
 
     userinput_keyword = st.text_input("Tippe ein Keyword ein", value= "data")
 
 
-    plot_zwei = st.header("Plot Nummer 2")
+    plot_zwei = st.header("Hier könnten weitere Plots folgen...")
 
 
 
-
-    plot_drei = st.header("Plot Nummer 3")
-
-
-
-
-    plot_vier = st.header("Plot Nummer 4")
-
-
-
-    plot_fünf = st.header("Plot Nummer 5")
 
 
 with tab2:
-    plot_detail = st.header("Detailplot Nummer 1")
+    plot_detail = st.header("Top Ten Keywords")
 
-    fig, ax = plt.subplots(figsize=(6,8))
+    fig, ax = plt.subplots(figsize=(6,8)) #Sieht so besser aus
     ax.barh(keywords, keywords_valcount)
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
 
-    plot_detail2 = st.header("Detailplot Nummer 2")
+    plot_detail2 = st.header("Anzahl Publikationen gesamt")
 
     x = []
     y = []
@@ -205,10 +196,11 @@ with tab2:
             y.append(df_publPerYear['count'][i])
 
 
+
     # plot
-    fig, ax = plt.subplots(figsize=(20,12))
+    fig, ax = plt.subplots()
     ax.plot(x, y)
-    st.pyplot(fig)
+    st.pyplot(fig, use_container_width=True)
 
 
 ################################################ P L O T S #############################################################
@@ -224,8 +216,13 @@ with info2:
     st.metric(label="Authoren", value=len(all_authors))
 
 with plot1:
+    fig, ax = plt.subplots()
+    ax.plot(keyword_Lineplot.title)
+    ax.set_xlabel("Jahr")
+    ax.set_ylabel("Anzahl")
+    ax.set_title("Anzahl an Keywords pro Jahr")
 
-    st.line_chart(keyword_Lineplot, use_container_width=True)
+    st.pyplot(fig, use_container_width=True)
 
 with plot2:
 
@@ -237,7 +234,7 @@ with plot2:
     percent_list = []
     for i, j in zip(df_publPerYear_keyword.Keywords, df_publPerYear_keyword.Publications):
         try:
-            percent = i / j
+            percent = 100*i/j
         except ZeroDivisionError:
             percent_list.append(0)
         else:
@@ -245,11 +242,12 @@ with plot2:
 
     df_publPerYear_keyword['Percent'] = percent_list
 
-    df_percent = df_publPerYear_keyword.drop(labels= ['Publications', 'Keywords'], axis = 1)
-
-    fig, ax = plt.subplots(figsize=(30, 24))
-    ax.plot(df_percent.Year, df_percent.Percent)
-    st.pyplot(fig)
+    fig, ax = plt.subplots()
+    ax.plot(df_publPerYear_keyword.Year, df_publPerYear_keyword.Percent)
+    ax.set_xlabel("Jahr")
+    ax.set_ylabel("Prozent")
+    ax.set_title("Prozentanteil Keywords an Gesamtpublikationen")
+    st.pyplot(fig, use_container_width=True)
 
 
 with plot3:
