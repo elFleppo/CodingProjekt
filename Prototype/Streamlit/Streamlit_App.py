@@ -192,9 +192,11 @@ with tab2:
 
 
     # plot
+    x = pd.to_datetime(x, format='%Y')
     fig, ax = plt.subplots()
     ax.plot(x, y)
     st.pyplot(fig, use_container_width=True)
+
 
 
 ################################################ P L O T S #############################################################
