@@ -5,7 +5,6 @@ import psycopg as psycopg
 import collections
 from nltk.corpus import stopwords
 from matplotlib import pyplot as plt
-from pandas.errors import EmptyDataError
 
 ################################################ O V E R V I E W #######################################################
 
@@ -26,10 +25,10 @@ st.title("Was für Themen haben in den letzten Jahren einen Zuwachs an Publikati
 
 
 with open("style.css") as f:
-    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True) #css
 
 
-info1, info2, info3, info4 = st.columns(4, gap = "medium")  #Widgets, "einfache" Infos, z.b. Anzahl Authoren
+info1, info2, info3, info4 = st.columns(4, gap = "large")  #Widgets, "einfache" Infos, z.b. Anzahl Authoren
 
 
 plot1, plot2 = st.columns(2, gap = "large")     #2x2 Matrix an Plots
@@ -38,9 +37,9 @@ plot3, plot4 = st.columns(2, gap = "large")
 
 
 #################################################### S Q L #############################################################
-@st.cache_resource
+@st.cache_resource                  #cached die db und lässt veränderungen zu.
 def db_connection():
-    return st.experimental_connection(name = "dblpppppp", type="sql", max_entries=None, ttl=None, autocommit=True)
+    return st.experimental_connection(name = "dblp", type="sql", max_entries=None, ttl=None, autocommit=True)   #Connection zu der Datenbank erstellen
 
 
 conn = db_connection()
@@ -63,12 +62,12 @@ df_publPerYear = conn.query("SELECT pubyear, COUNT(pubyear) FROM publications WH
 
 
 ############################################### F U N C T I O N S ######################################################
-progress_bar = st.progress(0) #Wir haben versucht einen Ladebalken zu implementieren, jedoch haben wir sehr kurze Ladezeiten.
+#progress_bar = st.progress(0) #Wir haben versucht einen Ladebalken zu implementieren, jedoch haben wir sehr kurze Ladezeiten.
 
 @st.cache_data
 def readDataToList(query, number):
-    with st.spinner("You spin me right round, baby right round"):
-        non_keywords = ["none", "home", "page"]
+    with st.spinner("Wird geladen"):
+        non_keywords = ["none", "home", "page"]         #Keywords die bei uns zu oft vorkamen und deshalb geblacklisted wurden
         stop_words = set(stopwords.words('english'))
         all_titles_string = query.to_string(decimal=";", index=False)
         keywords = []
@@ -86,31 +85,28 @@ def readDataToList(query, number):
         return most_common_keywords                                              #Sieht so aus [('none', 528876), ('home', 12867), ('page', 12866), ('data', 2192)]
 
 
-hist_values = readDataToList(all_titles, 10)
+hist_values = readDataToList(all_titles, 10)            #Top ten Keywords
 
 keywords = []
 keywords_valcount = []
 
 for i in hist_values:
-    with st.spinner("You spin me right round, baby right round"):
+    with st.spinner("Wird geladen"):
         keywords.append(i[0])
         keywords_valcount.append(i[1])
-st.success("hat geklappt")
-
 
 
 @st.cache_data
 def keyword_per_year(keyword):
-    with st.spinner("You spin me right round, baby right round"):
-        bool_keyword = all_titles["title"].str.contains(keyword, case = False, flags = 0)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
-        keyword_year = all_pubyear.merge(bool_keyword, left_index=True, right_index=True)
+    with st.spinner("Wird geladen"):
+        bool_keyword = all_titles["title"].str.contains(keyword, case = False)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
+        keyword_year = all_pubyear.merge(bool_keyword, left_index= True, right_index= True)
         keyword_True = keyword_year.loc[keyword_year.title, :]          #Filtere nach True.
         keyword_per_year = keyword_True.groupby("pubyear").sum()        #Gruppiere nach pubyear und gib die Anzahl zurück
         if keyword_per_year.empty == True:
-            st.error("Das eingegebene Keyword existiert nicht - Geben Sie ein anderes ein.")
+            return st.error("Das eingegebene Keyword existiert nicht - Geben Sie ein anderes ein.")
         else:
             return keyword_per_year
-
 
 def analyzePublType(df_publtype):
     keywords = []
@@ -175,12 +171,10 @@ with tab1:
 
 
 
-
-
 with tab2:
     plot_detail = st.header("Top Ten Keywords")
 
-    fig, ax = plt.subplots(figsize=(6,8)) #Sieht so besser aus
+    fig, ax = plt.subplots(figsize=(6,8))  #Sieht so besser aus
     ax.barh(keywords, keywords_valcount)
     st.pyplot(fig, use_container_width=True)
 
@@ -209,38 +203,43 @@ keyword_Lineplot = keyword_per_year(userinput_keyword)
 
 with info1:
 
-    st.metric(label = "Publikationen", value = len(all_titles))
+    st.metric(label = "Publikationen", value = len(all_titles)) #Wie viel Publikationen wir haben
 
 with info2:
 
-    st.metric(label="Authoren", value=len(all_authors))
+    st.metric(label="Authoren", value= len(all_authors))
 
 with plot1:
+
+    one_x_axis = pd.to_datetime(keyword_Lineplot.index, format='%Y') #umformatieren damit die X-Achse besser aussieht
     fig, ax = plt.subplots()
-    ax.plot(keyword_Lineplot.title)
+    ax.plot(one_x_axis, keyword_Lineplot.title)
     ax.set_xlabel("Jahr")
     ax.set_ylabel("Anzahl")
     ax.set_title("Anzahl an Keywords pro Jahr")
 
-    st.pyplot(fig, use_container_width=True)
+
+    st.pyplot(fig, use_container_width=True) #Nutze den ganzen Container den wir angegeben haben.
 
 with plot2:
-
-    line_plot_df = pd.DataFrame(keyword_Lineplot)
-    df_publPerYear_keyword = df_publPerYear.merge(right = line_plot_df, how = 'left', left_on = 'pubyear', right_on= 'pubyear')
+    line_plot_df = pd.DataFrame(keyword_Lineplot)           #Nutze die Daten die wir schon erarbeitet haben
+    df_publPerYear_keyword = df_publPerYear.merge(right = line_plot_df, how = 'left', left_on = 'pubyear', right_on= 'pubyear')    #SQL left join
     df_publPerYear_keyword = df_publPerYear_keyword.rename(columns={"pubyear": "Year", "count": "Publications", "title": "Keywords"})
     df_publPerYear_keyword = df_publPerYear_keyword.fillna(value = 0, axis = 1)
 
     percent_list = []
-    for i, j in zip(df_publPerYear_keyword.Keywords, df_publPerYear_keyword.Publications):
+    for i, j in zip(df_publPerYear_keyword.Keywords, df_publPerYear_keyword.Publications):      #Gehe beide Tabellenspalten durch
         try:
             percent = 100*i/j
         except ZeroDivisionError:
-            percent_list.append(0)
+            percent_list.append(0)   #Nicht durch 0 teilen.
         else:
             percent_list.append(percent)
 
     df_publPerYear_keyword['Percent'] = percent_list
+
+
+    df_publPerYear_keyword.Year = pd.to_datetime(df_publPerYear_keyword.Year, format='%Y')
 
     fig, ax = plt.subplots()
     ax.plot(df_publPerYear_keyword.Year, df_publPerYear_keyword.Percent)
