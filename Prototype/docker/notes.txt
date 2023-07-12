@@ -1,4 +1,0 @@
-ca.p12 passwort: cds2023
-truststore: cds2023
-Parser mit LXML für externen DTD support
-DB PASSWORD POSTGRES: cds2023

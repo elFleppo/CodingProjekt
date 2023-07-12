@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
+import pandas.errors
 import psycopg as psycopg
 import collections
 from nltk.corpus import stopwords
@@ -33,7 +33,7 @@ info1, info2, info3, info4 = st.columns(4, gap = "large")  #Widgets, "einfache" 
 
 plot1, plot2 = st.columns(2, gap = "large")     #2x2 Matrix an Plots
 
-plot3, plot4 = st.columns(2, gap = "large")
+
 
 
 #################################################### S Q L #############################################################
@@ -99,7 +99,7 @@ for i in hist_values:
 @st.cache_data
 def keyword_per_year(keyword):
     with st.spinner("Wird geladen"):
-        bool_keyword = all_titles["title"].str.contains(keyword, case = False)    #Gibt True und False zurück. Wörter mit Bindestrich werden hier glaub auch dazugezählt! Darum sinds mehr.
+        bool_keyword = all_titles["title"].str.contains(keyword, case = False)    #Gibt True und False zurück.
         keyword_year = all_pubyear.merge(bool_keyword, left_index= True, right_index= True)
         keyword_True = keyword_year.loc[keyword_year.title, :]          #Filtere nach True.
         keyword_per_year = keyword_True.groupby("pubyear").sum()        #Gruppiere nach pubyear und gib die Anzahl zurück
@@ -108,51 +108,32 @@ def keyword_per_year(keyword):
         else:
             return keyword_per_year
 
+
 def analyzePublType(df_publtype):
     keywords = []
     for i in range(0, len(df_publtype.index)):
         if df_publtype['publtype'][i] not in keywords:
             keywords.append(df_publtype['publtype'][i])
-    years = []
-    for j in range(0, len(df_publtype.index)):
-        if df_publtype['pubyear'][j] not in years:
-            years.append(df_publtype['pubyear'][j])
-    years = sorted(years)
-    firstYear = int(years[0])
-    lastYear = int(years[len(years) - 1])
-    publications = [[],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
-                    []]
-    n = 0
-    for k in range(firstYear, lastYear):
-        for l in keywords:
-            for m in range(0, len(df_publtype.index)):
-                if df_publtype['publtype'][m] == l:
-                    if df_publtype['pubyear'][m] == k:
-                        publications[n].append(df_publtype['count'][m])
-                    else:
-                        publications[n].append(0)
-        n += 1
-    print(publications)
+    # print(keywords)
+    publications = []
 
-    # create plot
+    for l in keywords:
+        count = 0
+        for m in range(0, len(df_publtype.index)):
+            if df_publtype['publtype'][m] == l:
+                count += 1
+        publications.append(count)
+    # print(publications)
+
+    # plot
     fig, ax = plt.subplots()
-    im = ax.imshow(publications)
-
-    # Show all ticks and label them with the respective list entries
-    ax.set_xticks(np.arange(len(years)), labels=years)
-    ax.set_yticks(np.arange(len(keywords)), labels=keywords)
-
-    # Rotate the tick labels and set their alignment.
-    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
-             rotation_mode="anchor")
-
-    # ax.set_title("Publications from keywords (publication/year)")
+    ax.pie(publications, radius=3, center=(4, 4),
+           wedgeprops={"linewidth": 1, "edgecolor": "white"}, frame=True)
+    ax.legend(keywords,
+              title="Keywords",
+              loc="center left",
+              bbox_to_anchor=(1, 0, 0.5, 1))
+    st.pyplot(fig, use_container_width=True)
     return plt.show()
 
 ##################################################### S I D E B A R ####################################################
@@ -189,14 +170,15 @@ with tab2:
             x.append(df_publPerYear['pubyear'][i])
             y.append(df_publPerYear['count'][i])
 
-
-
     # plot
     x = pd.to_datetime(x, format='%Y')
     fig, ax = plt.subplots()
     ax.plot(x, y)
     st.pyplot(fig, use_container_width=True)
 
+    plot_detail3 = st.header("Aufteilung der Publikationsarten")
+
+    analyzePublType(df_publtype)
 
 
 ################################################ P L O T S #############################################################
@@ -251,10 +233,47 @@ with plot2:
     st.pyplot(fig, use_container_width=True)
 
 
-with plot3:
-    pass
 
 
+""" 
+def analyzePublType(df_publtype):      #Dies ist der Code für den Plot, der aufgrund der Datenmenge und -verteilung nicht genutzt werden konnte:
+    keywords = []
+    for i in range(0, len(df_publtype.index)):
+        if df_publtype['publtype'][i] not in keywords:
+            keywords.append(df_publtype['publtype'][i])
+    #print(keywords)
+    years = []
+    for j in range(0, len(df_publtype.index)):
+        if df_publtype['pubyear'][j] not in years:
+            years.append(df_publtype['pubyear'][j])
+    years = sorted(years)
+    #print(years)
+    publications = []
+    
+    n = 0
+    for k in years:
+        keywordsC = []
+        for l in keywords:
+            for m in range(0, len(df_publtype.index)):
+                if df_publtype['publtype'][m] == l:
+                    if df_publtype['pubyear'][m] == k:
+                        keywordsC.append(df_publtype['count'][m])
+                    else:
+                        keywordsC.append(int(0))
+        publications.append(keywordsC)
+    #print(publications)
 
-with plot4:
-    pass
+    # create plot
+    fig, ax = plt.subplots()
+    im = ax.imshow(publications)
+
+    # Show all ticks and label them with the respective list entries
+    ax.set_xticks(np.arange(len(years)), labels=years)
+    ax.set_yticks(np.arange(len(keywords)), labels=keywords)
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=45, ha="right",
+             rotation_mode="anchor")
+    # ax.set_title("Publications from keywords (publication/year)")
+    return plt.show() 
+"""

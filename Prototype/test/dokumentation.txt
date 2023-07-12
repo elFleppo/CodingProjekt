@@ -1,0 +1,6 @@
+[Infos zu den Dateien]
+dblp.db --> sqlite db welche wir anfangs für tests erstellt hatten
+dblp.dtd --> dtd file für dblp.xml welche für den Parser notwendig ist (load_dtd=True)
+docker-compose.yml --> docker compose file für einen ursprünglichen Backend-Prototyp welcher mit Elasticsearch aufbauen wollten
+elasticsearch.yml --> elasticsearch konfigurationen
+parser.py --> Parser welcher die Daten aus dem xml in unsere postgres DB schreibt
